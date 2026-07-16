@@ -1,0 +1,161 @@
+/* --------------------------------------
+   Layout
+---------------------------------------- */
+.app-container {
+  min-height: 100vh;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ------------------------------------------------
+   Header
+-------------------------------------------------- */
+.header {
+  text-align: center;
+  max-width: 520px;
+}
+
+.header_badge {
+  display: inline-block;
+  background: #e8e8e8;
+  color: #444444;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.header_title {
+  font-size: 22px;
+  margin: 0 0 6px 0;
+}
+
+.header_subtitle {
+  font-size: 14px;
+  color: #666666;
+  margin: 0;
+}
+
+/* -------------------------------------------------
+   Card
+----------------------------------------------------- */
+.card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.section-heading {
+  font-size: 16px;
+  margin: 0 0 8px 0;
+}
+
+/* ----------------------------------------------------
+   Post composer
+-------------------------------------------------------- */
+.post-composer-heading h2 {
+  font-size: 16px;
+  margin: 12px 0 8px 0;
+}
+
+.post-composer-textarea,
+.draft-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.draft-textarea {
+  min-height: 90px;
+  margin-top: 8px;
+  background-color: #fafafa;
+}
+
+.draft-textarea:disabled {
+  color: #555555;
+}
+
+/* -------------------------------------------
+   Character counter
+---------------------------------------------- */
+.character-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #555555;
+}
+
+.character-info p {
+  margin: 0;
+}
+
+.error-text {
+  color: #d32f2f;
+  font-size: 13px;
+  margin: 6px 0 0 0;
+}
+
+/* ---------------------------------------------
+   Buttons
+------------------------------------------------- */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------
+   Draft cards
+----------------------------------------------- */
+.draft-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.draft-platform {
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.empty-text {
+  color: #888888;
+  font-size: 14px;
+}
+
+/* ---------------------------------------------
+   Footer
+-------------------------------------------------- */
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #888888;
+  max-width: 520px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* -------------------------------------------------
+   Responsive
+---------------------------------------------------- */
+@media (max-width: 480px) {
+  .card {
+    padding: 16px;
+  }
+}
