@@ -1,0 +1,152 @@
+import React, { useCallback } from 'react'
+import FullCalendar from '@fullcalendar/react'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import { useRenderCount, useBumpRenderCountFn } from './RenderMonitor'
+
+const platformColors = {
+  'Instagram': { bg: '#CDB4DB', border: '#B598C9', text: '#343434' },
+  'LinkedIn': { bg: '#BDE0FE', border: '#98C8EB', text: '#343434' },
+  'Facebook': { bg: '#FFF1B6', border: '#E6D690', text: '#343434' },
+  'Twitter/X': { bg: '#FFD6A5', border: '#E5BE8C', text: '#343434' }
+}
+
+const statusBadgeColors = {
+  'Draft': '#E8E8E8',
+  'Scheduled': '#A8DADC',
+  'Published': '#BDE0FE'
+}
+
+function calendarViewPropsAreEqual(prevProps, nextProps) {
+  if (prevProps.onEventClick !== nextProps.onEventClick) return false
+  if (prevProps.onEventDrop !== nextProps.onEventDrop) return false
+  const a = prevProps.events
+  const b = nextProps.events
+  if (a === b) return true
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    const ea = a[i]
+    const eb = b[i]
+    if (ea.id !== eb.id) return false
+    if (ea.start !== eb.start) return false
+    if (ea.end !== eb.end) return false
+    if (ea.title !== eb.title) return false
+    if (ea.backgroundColor !== eb.backgroundColor) return false
+    if (ea.borderColor !== eb.borderColor) return false
+    if (ea.textColor !== eb.textColor) return false
+    if (ea.className !== eb.className) return false
+    const pa = ea.extendedProps && ea.extendedProps.post
+    const pb = eb.extendedProps && eb.extendedProps.post
+    if (pa && pb) {
+      if (pa.id !== pb.id) return false
+      if (pa.date !== pb.date) return false
+      if (pa.time !== pb.time) return false
+      if (pa.platform !== pb.platform) return false
+      if (pa.status !== pb.status) return false
+      if (pa.title !== pb.title) return false
+      if (pa.description !== pb.description) return false
+    } else if ((pa && !pb) || (!pa && pb)) {
+      return false
+    }
+  }
+  return true
+}
+
+const CalendarView = React.memo(function CalendarView({ events, onEventClick, onEventDrop }) {
+  useRenderCount('calendarGrid')
+  const bumpFn = useBumpRenderCountFn()
+
+  const handleEventClick = useCallback((info) => {
+    const postId = parseInt(info.event.id, 10)
+    onEventClick(postId)
+  }, [onEventClick])
+
+  const handleEventDrop = useCallback((info) => {
+    const postId = parseInt(info.event.id, 10)
+    const newDate = info.event.startStr.split('T')[0]
+    const newTime = info.event.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    onEventDrop(postId, newDate, newTime)
+    info.revert()
+  }, [onEventDrop])
+
+  const renderEventContent = useCallback((eventInfo) => {
+    const post = eventInfo.event.extendedProps.post
+    if (!post) return null
+
+    const colors = platformColors[post.platform] || { bg: '#A8DADC', text: '#343434' }
+    return (
+      <div
+        className="fc-event-inner"
+        style={{ backgroundColor: colors.bg, color: colors.text, padding: '4px 8px', borderRadius: '6px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      >
+        <div className="fc-event-platform" style={{ fontSize: '10px', fontWeight: '700', opacity: 0.85 }}>
+          {post.platform}
+        </div>
+        <div className="fc-event-title" style={{ fontSize: '12px', fontWeight: '600', margin: '2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {post.title}
+        </div>
+        <div className="fc-event-time" style={{ fontSize: '10px', opacity: 0.8 }}>
+          {post.time} · {post.status}
+        </div>
+      </div>
+    )
+  }, [])
+
+  const renderEventContentWrapper = useCallback((eventInfo) => {
+    bumpFn('eventContentFn')
+    return renderEventContent(eventInfo)
+  }, [bumpFn, renderEventContent])
+
+  return (
+    <div className="calendar-container" data-testid="calendar-view">
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }}
+        editable={true}
+        droppable={true}
+        events={events}
+        eventClick={handleEventClick}
+        eventDrop={handleEventDrop}
+        eventContent={renderEventContentWrapper}
+        height={'auto'}
+        aspectRatio={1.8}
+        eventDisplay={'block'}
+        displayEventEnd={false}
+        dayMaxEventRows={4}
+        buttonText={{
+          today: 'Today',
+          month: 'Month',
+          week: 'Week',
+          day: 'Day'
+        }}
+      />
+    </div>
+  )
+}, calendarViewPropsAreEqual)
+
+export function postToEvent(post) {
+  const colors = platformColors[post.platform] || { bg: '#A8DADC', border: '#8FC8C8', text: '#343434' }
+  const startStr = `${post.date}T${post.time}:00`
+  const endDate = new Date(`${post.date}T${post.time}:00`)
+  endDate.setHours(endDate.getHours() + 1)
+  return {
+    id: String(post.id),
+    title: post.title,
+    start: startStr,
+    end: endDate.toISOString(),
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
+    textColor: colors.text,
+    extendedProps: { post, platform: post.platform, status: post.status },
+    className: `fc-event-${post.platform.toLowerCase().replace(/[^a-z]/g, '')}`
+  }
+}
+
+export { platformColors, statusBadgeColors }
+export default CalendarView
