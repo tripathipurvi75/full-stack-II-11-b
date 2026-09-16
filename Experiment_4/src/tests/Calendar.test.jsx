@@ -7,6 +7,7 @@ import CalendarPage from '../pages/CalendarPage'
 import App from '../App'
 import { setupStore } from '../redux/store'
 import { addPost, deletePost, updatePost, reschedulePost, setPlatformFilter, setStatusFilter } from '../redux/postsSlice'
+import { bumpCardRenderCount } from '../components/RenderMonitor'
 
 function renderWithProviders(ui, preloadedState) {
   const store = setupStore(preloadedState)
@@ -103,5 +104,114 @@ describe('Calendar and Integration Tests', () => {
     expect(byStatus.Scheduled).toBeGreaterThan(0)
     expect(byStatus.Published).toBeGreaterThan(0)
     expect(byStatus.Draft).toBeGreaterThan(0)
+  })
+
+  it('renders RenderMonitor with reset button and resets counter when clicked', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<CalendarPage isAddOpen={null} onCloseAdd={() => {}} onRequestEdit={() => {}} />)
+
+    const resetBtn = screen.getByTestId('btn-reset-counter')
+    expect(resetBtn).toBeInTheDocument()
+    expect(resetBtn).toHaveAttribute('title', 'Reset render count')
+
+    const countDisplay = screen.getByTestId('count-cards-rerendered')
+    expect(countDisplay.textContent).toBe('0')
+
+    const monitor = screen.getByTestId('render-monitor')
+    expect(monitor.textContent).toContain('Optimized ✓')
+
+    // Click reset button
+    await act(async () => {
+      await user.click(resetBtn)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('0')
+  })
+
+  it('toggles between Optimized and Non-Optimized rendering modes properly without resetting counter', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<CalendarPage isAddOpen={null} onCloseAdd={() => {}} onRequestEdit={() => {}} />)
+
+    const resetBtn = screen.getByTestId('btn-reset-counter')
+    await act(async () => {
+      await user.click(resetBtn)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('0')
+
+    // Set a non-zero count
+    act(() => {
+      bumpCardRenderCount(4)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('4')
+
+    const btnNonOpt = screen.getByTestId('btn-mode-nonoptimized')
+    const btnOpt = screen.getByTestId('btn-mode-optimized')
+
+    // Click Non-Optimized: mode changes, counter does NOT reset
+    await act(async () => {
+      await user.click(btnNonOpt)
+    })
+
+    const monitor = screen.getByTestId('render-monitor')
+    expect(monitor.textContent).toContain('Non-Optimized')
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('4')
+
+    // Click Optimized: mode changes, counter does NOT reset
+    await act(async () => {
+      await user.click(btnOpt)
+    })
+
+    expect(monitor.textContent).toContain('Optimized ✓')
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('4')
+  })
+
+  it('increments card re-render count by +2 per shift in Optimized and +30 in Non-Optimized mode', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<CalendarPage isAddOpen={null} onCloseAdd={() => {}} onRequestEdit={() => {}} />)
+
+    const resetBtn = screen.getByTestId('btn-reset-counter')
+    await act(async () => {
+      await user.click(resetBtn)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('0')
+
+    // In Optimized mode, post shifts bump +2 each
+    act(() => {
+      bumpCardRenderCount(2)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('2')
+
+    act(() => {
+      bumpCardRenderCount(2)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('4')
+
+    // Reset button resets to 0
+    await act(async () => {
+      await user.click(resetBtn)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('0')
+
+    // Switch to Non-Optimized
+    const btnNonOpt = screen.getByTestId('btn-mode-nonoptimized')
+    await act(async () => {
+      await user.click(btnNonOpt)
+    })
+
+    // In Non-Optimized mode, post shifts bump +30 each
+    act(() => {
+      bumpCardRenderCount(30)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('30')
+
+    act(() => {
+      bumpCardRenderCount(30)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('60')
+
+    // Reset button resets to 0
+    await act(async () => {
+      await user.click(resetBtn)
+    })
+    expect(screen.getByTestId('count-cards-rerendered').textContent).toBe('0')
   })
 })

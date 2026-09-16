@@ -35,15 +35,16 @@ export function resetCardCounter() {
   notify()
 }
 
-/** Records that one calendar/post card component re-rendered. */
-export function bumpCardRenderCount() {
-  snapshot = { ...snapshot, count: snapshot.count + 1 }
+/** Records that calendar/post card components re-rendered. */
+export function bumpCardRenderCount(amount = 1) {
+  const inc = typeof amount === 'number' ? amount : 1
+  snapshot = { ...snapshot, count: snapshot.count + inc }
   notify()
 }
 
-/** Sets the current Optimized / Non-Optimized mode and resets the counter. */
+/** Sets the current Optimized / Non-Optimized mode without resetting the counter. */
 export function setGlobalRenderMode(mode) {
-  snapshot = { count: 0, mode }
+  snapshot = { ...snapshot, mode }
   notify()
 }
 
@@ -64,8 +65,8 @@ export function useRenderCount() {
 // Used by CalendarView's eventContent renderer — this fires exactly
 // once per calendar/post card that FullCalendar actually renders.
 export function useBumpRenderCountFn() {
-  return useCallback(() => {
-    bumpCardRenderCount()
+  return useCallback((amount = 1) => {
+    bumpCardRenderCount(amount)
   }, [])
 }
 
@@ -96,7 +97,16 @@ export function RenderMonitor() {
       className={`render-monitor-badge ${isOptimized ? 'render-monitor-badge-opt' : 'render-monitor-badge-nonopt'}`}
       data-testid="render-monitor"
     >
-      <span className="render-monitor-icon" aria-hidden="true">🔄</span>
+      <button
+        type="button"
+        className="render-monitor-reset-btn"
+        onClick={() => resetCardCounter()}
+        title="Reset render count"
+        aria-label="Reset render count"
+        data-testid="btn-reset-counter"
+      >
+        <span className="render-monitor-icon" aria-hidden="true">🔄</span>
+      </button>
       <div className="render-monitor-info">
         <span className="render-monitor-metric-label">Cards Re-rendered</span>
         <span className="render-monitor-metric-value" data-testid="count-cards-rerendered">{count}</span>

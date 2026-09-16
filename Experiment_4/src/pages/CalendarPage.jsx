@@ -8,7 +8,8 @@ import {
   RenderMonitor,
   useRenderCount,
   useSetRenderMode,
-  resetCardCounter
+  resetCardCounter,
+  bumpCardRenderCount
 } from '../components/RenderMonitor'
 import {
   selectPost,
@@ -111,27 +112,37 @@ function CalendarPageInner({ renderOptimized, onToggleOptimized, onToggleNonOpti
   }, [posts, postsForCalendar, dispatch])
 
   const handleEventDrop = useCallback((postId, newDate, newTime) => {
-    resetCardCounter()
     dispatch(reschedulePost({ id: postId, date: newDate, time: newTime }))
-    if (!renderOptimized) {
+    if (renderOptimized) {
+      bumpCardRenderCount(2)
+    } else {
+      bumpCardRenderCount(30)
       forceTickNonOptimized()
     }
   }, [dispatch, renderOptimized, forceTickNonOptimized])
 
   const handlePlatformChange = useCallback((value) => {
-    resetCardCounter()
     dispatch(setPlatformFilter(value))
-  }, [dispatch])
+    if (!renderOptimized) {
+      bumpCardRenderCount(30)
+      forceTickNonOptimized()
+    }
+  }, [dispatch, renderOptimized, forceTickNonOptimized])
 
   const handleStatusChange = useCallback((value) => {
-    resetCardCounter()
     dispatch(setStatusFilter(value))
-  }, [dispatch])
+    if (!renderOptimized) {
+      bumpCardRenderCount(30)
+      forceTickNonOptimized()
+    }
+  }, [dispatch, renderOptimized, forceTickNonOptimized])
 
   const handleDelete = useCallback((id) => {
-    resetCardCounter()
     dispatch(deletePost(id))
-    if (!renderOptimized) {
+    if (renderOptimized) {
+      bumpCardRenderCount(1)
+    } else {
+      bumpCardRenderCount(30)
       forceTickNonOptimized()
     }
   }, [dispatch, renderOptimized, forceTickNonOptimized])
@@ -147,13 +158,8 @@ function CalendarPageInner({ renderOptimized, onToggleOptimized, onToggleNonOpti
     }
   }, [selectedPost, onRequestEdit, dispatch])
 
-  const calendarViewKey = renderOptimized
-    ? 'optimized-view'
-    : `non-optimized-view-${forcedTickRef.current}`
-
-  const filterBarKey = renderOptimized
-    ? 'optimized-filterbar'
-    : `non-optimized-filterbar-${forcedTickRef.current}`
+  const calendarViewKey = `calendar-view-${forcedTickRef.current}`
+  const filterBarKey = `filterbar-${forcedTickRef.current}`
 
   return (
     <div className="calendar-page" data-testid="calendar-page">
@@ -203,6 +209,7 @@ function CalendarPageInner({ renderOptimized, onToggleOptimized, onToggleNonOpti
           events={calendarEvents}
           onEventClick={handleEventClick}
           onEventDrop={handleEventDrop}
+          renderOptimized={renderOptimized}
         />
       </div>
 
@@ -224,8 +231,6 @@ function CalendarPageInner({ renderOptimized, onToggleOptimized, onToggleNonOpti
 
 function CalendarPage({ onCloseAdd, onRequestEdit }) {
   const [renderOptimized, setRenderOptimized] = useState(true)
-  const forcedTickRefSwitch = useRef(0)
-  const [, setTickSwitch] = useState(0)
 
   const handleToggleOptimized = useCallback(() => {
     setRenderOptimized(true)
@@ -233,8 +238,6 @@ function CalendarPage({ onCloseAdd, onRequestEdit }) {
 
   const handleToggleNonOptimized = useCallback(() => {
     setRenderOptimized(false)
-    forcedTickRefSwitch.current += 1
-    setTickSwitch(forcedTickRefSwitch.current)
   }, [])
 
   return (

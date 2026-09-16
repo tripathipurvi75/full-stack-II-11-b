@@ -1037,10 +1037,40 @@ input, select, textarea {
   border-color: #F3DCB6;
 }
 
+.render-monitor-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 6px;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+
+.render-monitor-reset-btn:hover {
+  transform: scale(1.2) rotate(45deg);
+  opacity: 0.85;
+}
+
+.render-monitor-reset-btn:active {
+  transform: scale(0.9) rotate(180deg);
+}
+
+.render-monitor-reset-btn:focus-visible {
+  outline: 2px solid var(--primary, #3B82F6);
+  outline-offset: 2px;
+}
+
 .render-monitor-icon {
   font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
+  display: inline-block;
+  user-select: none;
 }
 
 .render-monitor-info {

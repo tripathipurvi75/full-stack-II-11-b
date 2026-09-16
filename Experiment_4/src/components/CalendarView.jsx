@@ -19,6 +19,7 @@ const statusBadgeColors = {
 }
 
 function calendarViewPropsAreEqual(prevProps, nextProps) {
+  if (prevProps.renderOptimized !== nextProps.renderOptimized) return false
   if (prevProps.onEventClick !== nextProps.onEventClick) return false
   if (prevProps.onEventDrop !== nextProps.onEventDrop) return false
   const a = prevProps.events
@@ -53,9 +54,8 @@ function calendarViewPropsAreEqual(prevProps, nextProps) {
   return true
 }
 
-const CalendarView = React.memo(function CalendarView({ events, onEventClick, onEventDrop }) {
+const CalendarView = React.memo(function CalendarView({ events, onEventClick, onEventDrop, renderOptimized = true }) {
   useRenderCount('calendarGrid')
-  const bumpFn = useBumpRenderCountFn()
 
   const handleEventClick = useCallback((info) => {
     const postId = parseInt(info.event.id, 10)
@@ -94,9 +94,8 @@ const CalendarView = React.memo(function CalendarView({ events, onEventClick, on
   }, [])
 
   const renderEventContentWrapper = useCallback((eventInfo) => {
-    bumpFn('eventContentFn')
     return renderEventContent(eventInfo)
-  }, [bumpFn, renderEventContent])
+  }, [renderEventContent])
 
   return (
     <div className="calendar-container" data-testid="calendar-view">
